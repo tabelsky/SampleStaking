@@ -105,6 +105,7 @@ describe("SampleStaking", function () {
     await increaseBlockchainTime()
     await stake(sampleStaking, account_1, 0)
     accountInfo = await sampleStaking.accountInfo(account_1.address)
+    console.log(accountInfo)
     expect(accountInfo[2]).to.equal(baseSupply.div(2).mul(20).div(100))
     // await increaseBlockchainTime(baseHoldIntreval * 2)
     // await stake(sampleStaking, account_1, 0)

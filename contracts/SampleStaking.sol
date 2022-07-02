@@ -15,6 +15,7 @@ contract SampleStaking is Ownable {
     struct Account {
         uint256 deposit;
         uint256 updateTime;
+        uint256 reward;
     }
 
     mapping(address=>Account) public accounts;
@@ -45,28 +46,21 @@ contract SampleStaking is Ownable {
     function accountReward(address account) public view returns (uint256) {
 
  
-        return accounts[account].updateTime > 0  ? this.compound(accounts[account].deposit, percent, (block.timestamp - accounts[account].updateTime) / holdIntreval) : 0; 
+        return (accounts[account].updateTime > 0  ? this.compound(accounts[account].deposit, percent, (block.timestamp - accounts[account].updateTime) / holdIntreval) : 0) + accounts[account].reward; 
     }
 
 
     function _updateReward(address account) private {
-        IERC20 revardToken = IERC20(_revardToken);
-        revardToken.approve(account, this.accountReward(account));
+        accounts[account].reward = this.accountReward(account);
         accounts[account].updateTime = block.timestamp;
-  
-
     }
     
     function  stake(uint256 amount) public {
-        
         IERC20 stakingToken = IERC20(_stakingToken);
         stakingToken.transferFrom(msg.sender, address(this), amount);
+        _updateReward(msg.sender);
         accounts[msg.sender].deposit += amount;
         emit Stake(msg.sender, amount);   
-        _updateReward(msg.sender);
-        
-
-
         
     }
 
