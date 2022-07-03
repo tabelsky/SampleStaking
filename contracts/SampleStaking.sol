@@ -1,20 +1,19 @@
 //SPDX-License-Identifier: Unlicense
 pragma solidity ^0.8.15;
 
-import "hardhat/console.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 
 
 contract SampleStaking is Ownable {
     address private _stakingToken;
-    address private _revardToken;
-    uint256 private holdIntreval;
-    uint256 private percent;
+    address private _rewardToken;
+    uint32 private _holdInterval;
+    uint16 private _percent;
 
     struct Account {
         uint256 deposit;
-        uint256 updateTime;
+        uint64 updateTime;
         uint256 reward;
         uint256 claimed;
     }
@@ -22,48 +21,43 @@ contract SampleStaking is Ownable {
     mapping(address=>Account) public accounts;
 
     event Stake(address indexed account, uint256 amount);
+    event UnStake(address indexed account, uint256 amount);
+    event Winthdraw(address indexed account, uint256 amount);
+    event Claim(address indexed account, uint256 amount);
+    event UnClaim(address indexed account, uint256 amount);
+    event SetPercent(uint16 percent_);
+    event SetHoldInterval(uint32 holdIntreval_);
 
-    modifier isAccountant(address account) {
-        require(msg.sender == account, "not enough privelgeges");
-        _;
-    }
 
-    constructor(address stakingToken_, address rewardToken_, uint256 holdInterval_, uint256 percent_) {
+    constructor(address stakingToken_, address rewardToken_, uint32 holdInterval_, uint16 percent_) {
         _stakingToken = stakingToken_;
-        _revardToken = rewardToken_;
-        holdIntreval = holdInterval_;
-        percent = percent_;
+        _rewardToken = rewardToken_;
+        _holdInterval = holdInterval_;
+        _percent = percent_;
 
     }
 
 
-    function compound (uint256 deposit, uint256 percent_, uint periods) public pure returns (uint256) {
+    function countReward (uint256 deposit, uint16 percent_, uint256 periods) public pure returns (uint256) {
 
-        // нужно придумать что то то оптимальней
-        
-        uint256 updatedDeposit = deposit;
-        while (periods > 0) {
-            updatedDeposit += (updatedDeposit * percent_) / 100;
-            periods -= 1;
-        }
-        return updatedDeposit - deposit;
+        return ((deposit * percent_) / 100) * periods;
 }
 
     function accountReward(address account) public view returns (uint256) {
 
  
-        return (accounts[account].updateTime > 0  ? this.compound(accounts[account].deposit, percent, (block.timestamp - accounts[account].updateTime) / holdIntreval) : 0) + accounts[account].reward; 
+        return (accounts[account].updateTime > 0  ? this.countReward(accounts[account].deposit, _percent, (block.timestamp - accounts[account].updateTime) / _holdInterval) : 0) + accounts[account].reward; 
     }
 
 
     function _updateReward(address account) private {
         accounts[account].reward = this.accountReward(account);
-        accounts[account].updateTime = block.timestamp;
+        accounts[account].updateTime = uint64(block.timestamp);
     }
     
     function  stake(uint256 amount) public {
-        IERC20 stakingToken = IERC20(_stakingToken);
-        stakingToken.transferFrom(msg.sender, address(this), amount);
+        IERC20 stakingTokenI = IERC20(_stakingToken);
+        stakingTokenI.transferFrom(msg.sender, address(this), amount);
         _updateReward(msg.sender);
         accounts[msg.sender].deposit += amount;
         emit Stake(msg.sender, amount);   
@@ -71,41 +65,72 @@ contract SampleStaking is Ownable {
     }
 
 
-    function unStake(uint256 amount) public {
-        require((block.timestamp - accounts[msg.sender].updateTime) >= holdIntreval);
+    function unstake(uint256 amount) public {
+        require((block.timestamp - accounts[msg.sender].updateTime) >= _holdInterval, "hold interval isn't up");
         require(accounts[msg.sender].deposit >= amount, "not enough balance");
         _updateReward(msg.sender);
-        IERC20 stakingToken = IERC20(_stakingToken);
-        stakingToken.transfer(msg.sender, amount);
+        IERC20 stakingTokenI = IERC20(_stakingToken);
         accounts[msg.sender].deposit -= amount;
+        stakingTokenI.transfer(msg.sender, amount);
+        emit UnStake(msg.sender, amount);   
 
     }
 
-    function accountInfo(address account) public view returns(uint, uint, uint) {
-        return (accounts[account].deposit, accounts[account].updateTime, this.accountReward(account));
+    function accountInfo(address account) public view returns(uint256, uint64, uint256, uint256) {
+        return (accounts[account].deposit, accounts[account].updateTime, this.accountReward(account), accounts[account].claimed);
     }
 
     function winthdraw() public {
-        IERC20 rewardToken = IERC20(_revardToken);
+        IERC20 rewardTokenI = IERC20(_rewardToken);
         _updateReward(msg.sender);
-        rewardToken.transfer(msg.sender, accounts[msg.sender].reward);
+        uint256 reward = accounts[msg.sender].reward;
         accounts[msg.sender].reward = 0;
+        rewardTokenI.transfer(msg.sender, reward);
+        emit Winthdraw(msg.sender, reward);
+        
     }
 
     function claim(address account, uint256 amount) public onlyOwner {
+        _updateReward(account);
         require(accounts[account].reward >= amount, "not enough balance");
         accounts[account].claimed += amount;
         accounts[account].reward -= amount;
+        emit Claim(account, amount);
     }
 
-    function unClaim(address account, uint256 amount) public onlyOwner {
+    function unclaim(address account, uint256 amount) public onlyOwner {
+        _updateReward(account);
+        require(accounts[account].claimed >= amount, "not enough claimed balance");
         accounts[account].claimed -= amount;
         accounts[account].reward += amount;
+        emit UnClaim(account, amount);
     }
 
+    function setPercent(uint16 percent_) public onlyOwner{ 
+        _percent = percent_;
+        emit SetPercent(percent_);
+    }
 
+    function setHoldInterval(uint32 holdInterval_) public onlyOwner {
+        _holdInterval = holdInterval_;
+        emit SetHoldInterval(holdInterval_);
+    }
 
+    function percent() public view returns (uint16) {
+        return _percent;
+    }
 
+    function holdInterval() public view returns (uint32) {
+        return _holdInterval;
+    }
+
+    function rewardToken() public view returns (address) {
+        return _rewardToken;
+    }
+
+    function stakingToken() public view returns (address) {
+        return _stakingToken;
+    }
 
 }
 

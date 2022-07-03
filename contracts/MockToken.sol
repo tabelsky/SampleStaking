@@ -1,6 +1,7 @@
 //SPDX-License-Identifier: Unlicense
 pragma solidity ^0.8.15;
 
+
 contract MockToken {
 
     string private _name;
@@ -27,6 +28,7 @@ contract MockToken {
     }
 
     modifier hasAllowance(address _from, address _to, uint256 _value) {
+
         require(allowance(_from, _to) >= _value, "not enough allowance");
         _;
     }
