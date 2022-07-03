@@ -16,11 +16,17 @@ contract SampleStaking is Ownable {
         uint256 deposit;
         uint256 updateTime;
         uint256 reward;
+        uint256 claimed;
     }
 
     mapping(address=>Account) public accounts;
 
     event Stake(address indexed account, uint256 amount);
+
+    modifier isAccountant(address account) {
+        require(msg.sender == account, "not enough privelgeges");
+        _;
+    }
 
     constructor(address stakingToken_, address rewardToken_, uint256 holdInterval_, uint256 percent_) {
         _stakingToken = stakingToken_;
@@ -64,9 +70,41 @@ contract SampleStaking is Ownable {
         
     }
 
+
+    function unStake(uint256 amount) public {
+        require((block.timestamp - accounts[msg.sender].updateTime) >= holdIntreval);
+        require(accounts[msg.sender].deposit >= amount, "not enough balance");
+        _updateReward(msg.sender);
+        IERC20 stakingToken = IERC20(_stakingToken);
+        stakingToken.transfer(msg.sender, amount);
+        accounts[msg.sender].deposit -= amount;
+
+    }
+
     function accountInfo(address account) public view returns(uint, uint, uint) {
         return (accounts[account].deposit, accounts[account].updateTime, this.accountReward(account));
     }
+
+    function winthdraw() public {
+        IERC20 rewardToken = IERC20(_revardToken);
+        _updateReward(msg.sender);
+        rewardToken.transfer(msg.sender, accounts[msg.sender].reward);
+        accounts[msg.sender].reward = 0;
+    }
+
+    function claim(address account, uint256 amount) public onlyOwner {
+        require(accounts[account].reward >= amount, "not enough balance");
+        accounts[account].claimed += amount;
+        accounts[account].reward -= amount;
+    }
+
+    function unClaim(address account, uint256 amount) public onlyOwner {
+        accounts[account].claimed -= amount;
+        accounts[account].reward += amount;
+    }
+
+
+
 
 
 }
