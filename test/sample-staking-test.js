@@ -4,7 +4,6 @@ const { solidity } = require("ethereum-waffle");
 chai.use(solidity);
 const { expect } = chai;
 
-
 function toToken(uintString) {
   return ethers.utils.parseUnits(uintString, 18);
 }
@@ -13,8 +12,6 @@ const baseSupply = toToken("1");
 const rewardTokenStartBallance = toToken("1000000000000000");
 const baseHoldIntreval = 1800;
 const basePercent = 20;
-
-
 
 async function approve(contract, account, to, amount) {
   const entry = await contract.connect(account);
@@ -28,19 +25,19 @@ async function extractEvents(response) {
 
 async function stake(stakeContract, account, amount) {
   const entry = await stakeContract.connect(account);
-  response = await entry.stake(amount);
+  const response = await entry.stake(amount);
   return (await extractEvents(response))[1].args;
 }
 
 async function unstake(stakeContract, account, amount) {
   const entry = await stakeContract.connect(account);
-  response = await entry.unstake(amount);
+  const response = await entry.unstake(amount);
   return (await extractEvents(response))[1].args;
 }
 
 async function winthdraw(stakeContract, account) {
   const entry = await stakeContract.connect(account);
-  response = await entry.winthdraw();
+  const response = await entry.winthdraw();
   return (await extractEvents(response))[1].args;
 
 }
@@ -48,7 +45,6 @@ async function winthdraw(stakeContract, account) {
 function getNow() {
   return parseInt(Date.now() / 1000);
 }
-
 
 async function increaseBlockchainTime(time=baseHoldIntreval) {
   await ethers.provider.send("evm_increaseTime", [time]);
@@ -65,7 +61,6 @@ describe("SampleStaking", function () {
   let rewardToken, stakingToken, sampleStaking, owner, account_1, account_2;
 
   beforeEach(async function () {
-    // await hre.network.provider.send("hardhat_reset");
     [owner, account_1, account_2] = await ethers.getSigners();
     const RewardToken = await ethers.getContractFactory("MockToken", owner);
     rewardToken = await RewardToken.deploy(
