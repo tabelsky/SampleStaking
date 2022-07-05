@@ -50,7 +50,6 @@ contract SampleStaking is Ownable {
         
     }
 
-
     function unstake(uint256 amount) public {
         require((block.timestamp - accounts[msg.sender].updateTime) >= _holdInterval, "hold interval isn't up");
         require(accounts[msg.sender].deposit >= amount, "not enough balance");
@@ -77,7 +76,6 @@ contract SampleStaking is Ownable {
         accounts[account].reward = 0;
         emit Claim(account);
     }
-
 
     function setPercent(uint16 percent_) public onlyOwner{ 
         _percent = percent_;
@@ -106,4 +104,3 @@ contract SampleStaking is Ownable {
     }
 
 }
-
