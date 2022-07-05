@@ -3,10 +3,6 @@ import { Contract, Signer, BigNumber } from "ethers";
 import { expect } from "chai";
 
 
-const SignerType = ethers.Signer
-
-
-
 function toToken(uintString: string) {
   return ethers.utils.parseUnits(uintString, 18);
 }
