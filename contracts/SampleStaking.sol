@@ -23,8 +23,7 @@ contract SampleStaking is Ownable {
     event Stake(address indexed account, uint256 amount);
     event UnStake(address indexed account, uint256 amount);
     event Winthdraw(address indexed account, uint256 amount);
-    event Claim(address indexed account, uint256 amount);
-    event UnClaim(address indexed account, uint256 amount);
+    event Claim(address indexed account);
     event SetPercent(uint16 percent_);
     event SetHoldInterval(uint32 holdIntreval_);
 
@@ -37,21 +36,8 @@ contract SampleStaking is Ownable {
 
     }
 
-
-    function countReward (uint256 deposit, uint16 percent_, uint256 periods) public pure returns (uint256) {
-
-        return ((deposit * percent_) / 100) * periods;
-}
-
-    function accountReward(address account) public view returns (uint256) {
-
- 
-        return (accounts[account].updateTime > 0  ? this.countReward(accounts[account].deposit, _percent, (block.timestamp - accounts[account].updateTime) / _holdInterval) : 0) + accounts[account].reward; 
-    }
-
-
     function _updateReward(address account) private {
-        accounts[account].reward = this.accountReward(account);
+        accounts[account].reward = (accounts[account].updateTime > 0  ? ((accounts[account].deposit * _percent) / 100) * ((block.timestamp - accounts[account].updateTime) / _holdInterval) : 0) + accounts[account].reward;
         accounts[account].updateTime = uint64(block.timestamp);
     }
     
@@ -76,10 +62,6 @@ contract SampleStaking is Ownable {
 
     }
 
-    function accountInfo(address account) public view returns(uint256, uint64, uint256, uint256) {
-        return (accounts[account].deposit, accounts[account].updateTime, this.accountReward(account), accounts[account].claimed);
-    }
-
     function winthdraw() public {
         IERC20 rewardTokenI = IERC20(_rewardToken);
         _updateReward(msg.sender);
@@ -90,21 +72,12 @@ contract SampleStaking is Ownable {
         
     }
 
-    function claim(address account, uint256 amount) public onlyOwner {
+    function claim(address account) public onlyOwner {
         _updateReward(account);
-        require(accounts[account].reward >= amount, "not enough balance");
-        accounts[account].claimed += amount;
-        accounts[account].reward -= amount;
-        emit Claim(account, amount);
+        accounts[account].reward = 0;
+        emit Claim(account);
     }
 
-    function unclaim(address account, uint256 amount) public onlyOwner {
-        _updateReward(account);
-        require(accounts[account].claimed >= amount, "not enough claimed balance");
-        accounts[account].claimed -= amount;
-        accounts[account].reward += amount;
-        emit UnClaim(account, amount);
-    }
 
     function setPercent(uint16 percent_) public onlyOwner{ 
         _percent = percent_;
@@ -134,18 +107,3 @@ contract SampleStaking is Ownable {
 
 }
 
-// Написать смарт-контракт стейкинга, создать пул ликвидности на uniswap в тестовой сети. Контракт стейкинга принимает ЛП токены, после определенного времени (например 10 минут) пользователю начисляются награды в виде ревард токенов написанных на первой неделе. Количество токенов зависит от суммы застейканных ЛП токенов (например 20 процентов). Вывести застейканные ЛП токены также можно после определенного времени (например 20 минут).
-
-// - Создать пул ликвидности
-// - Реализовать функционал стейкинга в смарт контракте
-// - Написать полноценные тесты к контракту
-// - Написать скрипт деплоя
-// - Задеплоить в тестовую сеть
-// - Написать таски на stake, unstake, claim
-// - Верифицировать контракт
-
-// Требования
-// - Функция stake(uint256 amount) - списывает с пользователя на контракт стейкинга ЛП токены в количестве amount, обновляет в контракте баланс пользователя
-// - Функция claim() - списывает с контракта стейкинга ревард токены доступные в качестве наград
-// - Функция unstake() - списывает с контракта стейкинга ЛП токены доступные для вывода
-// - Функции админа для изменения параметров стейкинга (время заморозки, процент)

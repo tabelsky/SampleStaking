@@ -1,10 +1,16 @@
-require("dotenv").config();
 
-require("@nomiclabs/hardhat-etherscan");
-require("@nomiclabs/hardhat-waffle");
-require("hardhat-gas-reporter");
-require("solidity-coverage");
-require("./tasks/tasks");
+import { task } from "hardhat/config";
+import "@nomiclabs/hardhat-waffle";
+import "@nomiclabs/hardhat-etherscan"
+import "hardhat-gas-reporter"
+import "solidity-coverage"
+import "./tasks/tasks"
+import {config} from "dotenv"
+
+
+config()
+
+
 
 // This is a sample Hardhat task. To learn how to create your own go to
 // https://hardhat.org/guides/create-task.html
