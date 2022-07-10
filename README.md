@@ -15,4 +15,4 @@
  - Функции админа для изменения параметров стейкинга (время заморозки, процент)
 
 
- Контракт: https://ropsten.etherscan.io/address/0xbFB55766d33Ab8Db09c83d38608Fdb3963BCa14E#code
+ Контракт: https://ropsten.etherscan.io/address/0xc4DbDEc44aDFD4616E8489e7595D409022b62551#code

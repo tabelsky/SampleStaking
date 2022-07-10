@@ -5,11 +5,18 @@
     "networks": {
         "ropsten": {
             "rewardToken": "0xb1b835D7a3139589008A35d370a6aB0E06505337",
-            "rewardToken_": "0x1A8e9d1b3Ba1BFCAEd6178513F5c385B69bB4Fa6",
+            "rewardTokenPair": "0x1A8e9d1b3Ba1BFCAEd6178513F5c385B69bB4Fa6",
             "stakingToken": "0xaD2369c2a1baD0e4f652db31A989D4d3fC458922",
             "contract": "0xbFB55766d33Ab8Db09c83d38608Fdb3963BCa14E",
             "percent": 20,
-            "holdInterval": 1800
+            "holdInterval": 1800,
+            "uniswap": {
+                "factory": "0x5C69bEe701ef814a2B6a3EDD4B1652CB9cc5aA6f",
+                "router": "0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D",
+                "pair": "0xaD2369c2a1baD0e4f652db31A989D4d3fC458922"
+
+            
+            }
     
         }
 

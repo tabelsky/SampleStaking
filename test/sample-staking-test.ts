@@ -12,10 +12,12 @@ const rewardTokenStartBallance = toToken("1000000000000000");
 const baseHoldIntreval = 1800;
 const basePercent = 20;
 
-async function approve(contract: Contract, account: Signer, to: Signer | Contract, amount: BigNumber) {
-  const entry = await contract.connect(account);
-  await entry.approve(to.address, amount);
 
+
+async function approve(contract: Contract, account: Signer, address: String, amount: BigNumber) {
+  const entry = await contract.connect(account);
+  await entry.approve(address, amount);
+  
 }
 
 
@@ -90,7 +92,7 @@ describe("SampleStaking", function () {
       basePercent
     );
     await rewardToken.mint(sampleStaking.address, rewardTokenStartBallance);
-    await approve(stakingToken, account_2, sampleStaking, baseSupply);
+    await approve(stakingToken, account_2, sampleStaking.address, baseSupply);
     
 
 
@@ -105,14 +107,14 @@ describe("SampleStaking", function () {
  
 
   it("check stake", async function () {
-    await approve(stakingToken, account_1, sampleStaking, baseSupply.div(2));
+    await approve(stakingToken, account_1, sampleStaking.address, baseSupply.div(2));
     const eventData = await stake(sampleStaking, account_1, baseSupply.div(2));
     expect(eventData.account).to.equal(await account_1.getAddress());
     expect(eventData.amount).to.equal(baseSupply.div(2));
     expect(await stakingToken.balanceOf(sampleStaking.address)).to.equal(baseSupply.div(2));
     await increaseBlockchainTime();
     await stake(sampleStaking, account_1, toToken('0'));
-    await approve(stakingToken, account_1, sampleStaking, baseSupply.div(2));
+    await approve(stakingToken, account_1, sampleStaking.address, baseSupply.div(2));
     await stake(sampleStaking, account_1, baseSupply.div(2));
     await increaseBlockchainTime();
     await winthdraw(sampleStaking, account_1);
@@ -121,7 +123,7 @@ describe("SampleStaking", function () {
   })
 
   it('check unstake hold interval', async function () {
-    await approve(stakingToken, account_1, sampleStaking, baseSupply);
+    await approve(stakingToken, account_1, sampleStaking.address, baseSupply);
     await stake(sampleStaking, account_1, baseSupply);
     const entry = await sampleStaking.connect(account_1);
     expect(entry.unstake(baseSupply)).to.be.revertedWith("hold interval isn't up");
@@ -129,7 +131,7 @@ describe("SampleStaking", function () {
   })
 
   it('check unstake', async function() {
-    await approve(stakingToken, account_1, sampleStaking, baseSupply);
+    await approve(stakingToken, account_1, sampleStaking.address, baseSupply);
     await stake(sampleStaking, account_1, baseSupply);
     await increaseBlockchainTime();
     await unstake(sampleStaking, account_1, baseSupply.div(2));
@@ -139,7 +141,7 @@ describe("SampleStaking", function () {
   }) 
 
   it('check winthdraw', async function() {
-    await approve(stakingToken, account_1, sampleStaking, baseSupply);
+    await approve(stakingToken, account_1, sampleStaking.address, baseSupply);
     await stake(sampleStaking, account_1, baseSupply);
     await increaseBlockchainTime();
     let eventData = await winthdraw(sampleStaking, account_1);
@@ -189,7 +191,7 @@ describe("SampleStaking", function () {
 
 
   it ('test claim', async function() {
-    await approve(stakingToken, account_1, sampleStaking, baseSupply);
+    await approve(stakingToken, account_1, sampleStaking.address, baseSupply);
     await stake(sampleStaking, account_1, baseSupply);
     await increaseBlockchainTime();
     await sampleStaking.claim(await account_1.getAddress());
